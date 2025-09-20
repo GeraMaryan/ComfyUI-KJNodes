@@ -1,4 +1,6 @@
 # ComfyUI-KJNodes/__init__.py  (самый верх файла)
+print("[KJNodes FORK by GeraMaryan][BOOT] importing __init__ from:", __file__, flush=True)
+
 import logging, pathlib, subprocess
 
 FORK_TAG = "[KJNodes FORK by GeraMaryan]"
