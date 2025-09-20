@@ -1,3 +1,22 @@
+# ComfyUI-KJNodes/__init__.py  (самый верх файла)
+import logging, pathlib, subprocess
+
+FORK_TAG = "[KJNodes FORK by GeraMaryan]"
+def _fork_banner():
+    commit = "unknown"
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=pathlib.Path(__file__).parent,
+            text=True
+        ).strip()
+    except Exception:
+        pass
+    print(f"{FORK_TAG} loaded, commit={commit}, file={__file__}", flush=True)
+    logging.warning(f"{FORK_TAG} loaded, commit={commit}")
+
+_fork_banner()
+
 from .nodes.nodes import *
 from .nodes.curve_nodes import *
 from .nodes.batchcrop_nodes import *

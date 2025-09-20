@@ -713,6 +713,33 @@ class TorchCompileModelFluxAdvancedV2:
         diffusion_model = m.get_model_object("diffusion_model")
         torch._dynamo.config.cache_size_limit = dynamo_cache_size_limit
 
+        # --- KJ FORK: force NO CUDAGRAPHS on WAN compile path ---
+        print("[KJNodes fork] WanV2: incoming args:",
+              f"backend={backend}, mode={mode}, dynamic={dynamic}, fullgraph={fullgraph}",
+              flush=True)
+
+        # 1) Грубо отрубаем явный backend=cudagraphs
+        if backend == "cudagraphs":
+            print("[KJNodes fork] forcing backend=cudagraphs -> inductor (WAN path)", flush=True)
+            backend = "inductor"
+
+        # 2) Любой «графовый» режим переводим в no-cudagraphs
+        if mode in ("reduce-overhead", "max-autotune"):
+            print(f"[KJNodes fork] forcing mode={mode} -> max-autotune-no-cudagraphs", flush=True)
+            mode = "max-autotune-no-cudagraphs"
+
+        # 3) Локальный monkey-patch torch.compile, чтобы ГАРАНТИРОВАНО пробрасывать disable_cudagraphs=True
+        import torch as _torch
+        _orig_compile = _torch.compile
+
+        def _compile_nocg(mod, *a, **kw):
+            kw.setdefault("disable_cudagraphs", True)
+            return _orig_compile(mod, *a, **kw)
+
+        _torch.compile = _compile_nocg
+        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        # --- /KJ FORK ---
+
         compile_key_list = []
         
         try:
@@ -728,7 +755,6 @@ class TorchCompileModelFluxAdvancedV2:
                 from torch.compiler import cudagraph_mark_step_begin as _cmark
             except Exception:
                 _cmark = None
-
             def _mark_wrapper(executor):
                 def _wrapped(*args, **kwargs):
                     if _cmark:
@@ -739,7 +765,16 @@ class TorchCompileModelFluxAdvancedV2:
 
             # маркер шага ставим обёрткой вокруг APPLY_MODEL
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
-            set_torch_compile_wrapper(model=m, keys=compile_key_list, backend=backend, mode=mode, dynamic=dynamic, fullgraph=fullgraph)           
+            try:
+                # существующие строки, включая формирование compile_key_list…
+                set_torch_compile_wrapper(model=m, keys=compile_key_list,
+                                          backend=backend, mode=mode,
+                                          dynamic=dynamic, fullgraph=fullgraph)
+            finally:
+                # Вернуть поведение обратно, чтобы не ломать другие ноды
+                import torch as _torch
+                _torch.compile = _orig_compile
+                print("[KJNodes fork] torch.compile restored", flush=True)
         except:
             raise RuntimeError("Failed to compile model")
         
@@ -890,7 +925,35 @@ class TorchCompileModelWanVideoV2_custom:
         from comfy_api.torch_helpers import set_torch_compile_wrapper
         m = model.clone()
         diffusion_model = m.get_model_object("diffusion_model")
-        torch._dynamo.config.cache_size_limit = dynamo_cache_size_limit            
+        torch._dynamo.config.cache_size_limit = dynamo_cache_size_limit
+
+        # --- KJ FORK: force NO CUDAGRAPHS on WAN compile path ---
+        print("[KJNodes fork] WanV2: incoming args:",
+              f"backend={backend}, mode={mode}, dynamic={dynamic}, fullgraph={fullgraph}",
+              flush=True)
+
+        # 1) Грубо отрубаем явный backend=cudagraphs
+        if backend == "cudagraphs":
+            print("[KJNodes fork] forcing backend=cudagraphs -> inductor (WAN path)", flush=True)
+            backend = "inductor"
+
+        # 2) Любой «графовый» режим переводим в no-cudagraphs
+        if mode in ("reduce-overhead", "max-autotune"):
+            print(f"[KJNodes fork] forcing mode={mode} -> max-autotune-no-cudagraphs", flush=True)
+            mode = "max-autotune-no-cudagraphs"
+
+        # 3) Локальный monkey-patch torch.compile, чтобы ГАРАНТИРОВАНО пробрасывать disable_cudagraphs=True
+        import torch as _torch
+        _orig_compile = _torch.compile
+
+        def _compile_nocg(mod, *a, **kw):
+            kw.setdefault("disable_cudagraphs", True)
+            return _orig_compile(mod, *a, **kw)
+
+        _torch.compile = _compile_nocg
+        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        # --- /KJ FORK ---
+
         try:
             if compile_transformer_blocks_only:
                 compile_key_list = []
@@ -913,8 +976,16 @@ class TorchCompileModelWanVideoV2_custom:
 
             # маркер шага ставим обёрткой вокруг APPLY_MODEL
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
-
-            set_torch_compile_wrapper(model=m, keys=compile_key_list, backend=backend, mode=mode, dynamic=dynamic, fullgraph=fullgraph)           
+            try:
+                # существующие строки, включая формирование compile_key_list…
+                set_torch_compile_wrapper(model=m, keys=compile_key_list,
+                                          backend=backend, mode=mode,
+                                          dynamic=dynamic, fullgraph=fullgraph)
+            finally:
+                # Вернуть поведение обратно, чтобы не ломать другие ноды
+                import torch as _torch
+                _torch.compile = _orig_compile
+                print("[KJNodes fork] torch.compile restored", flush=True)
         except:
             raise RuntimeError("Failed to compile model")
 
@@ -944,7 +1015,35 @@ class TorchCompileModelQwenImage:
         from comfy_api.torch_helpers import set_torch_compile_wrapper
         m = model.clone()
         diffusion_model = m.get_model_object("diffusion_model")
-        torch._dynamo.config.cache_size_limit = dynamo_cache_size_limit            
+        torch._dynamo.config.cache_size_limit = dynamo_cache_size_limit
+
+        # --- KJ FORK: force NO CUDAGRAPHS on WAN compile path ---
+        print("[KJNodes fork] WanV2: incoming args:",
+              f"backend={backend}, mode={mode}, dynamic={dynamic}, fullgraph={fullgraph}",
+              flush=True)
+
+        # 1) Грубо отрубаем явный backend=cudagraphs
+        if backend == "cudagraphs":
+            print("[KJNodes fork] forcing backend=cudagraphs -> inductor (WAN path)", flush=True)
+            backend = "inductor"
+
+        # 2) Любой «графовый» режим переводим в no-cudagraphs
+        if mode in ("reduce-overhead", "max-autotune"):
+            print(f"[KJNodes fork] forcing mode={mode} -> max-autotune-no-cudagraphs", flush=True)
+            mode = "max-autotune-no-cudagraphs"
+
+        # 3) Локальный monkey-patch torch.compile, чтобы ГАРАНТИРОВАНО пробрасывать disable_cudagraphs=True
+        import torch as _torch
+        _orig_compile = _torch.compile
+
+        def _compile_nocg(mod, *a, **kw):
+            kw.setdefault("disable_cudagraphs", True)
+            return _orig_compile(mod, *a, **kw)
+
+        _torch.compile = _compile_nocg
+        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        # --- /KJ FORK ---
+
         try:
             if compile_transformer_blocks_only:
                 compile_key_list = []
@@ -952,7 +1051,11 @@ class TorchCompileModelQwenImage:
                     compile_key_list.append(f"diffusion_model.transformer_blocks.{i}")
             else:
                 compile_key_list =["diffusion_model"]
-
+            from comfy.patcher_extension import WrappersMP
+            try:
+                from torch.compiler import cudagraph_mark_step_begin as _cmark
+            except Exception:
+                _cmark = None
             def _mark_wrapper(executor):
                 def _wrapped(*args, **kwargs):
                     if _cmark:
@@ -963,8 +1066,16 @@ class TorchCompileModelQwenImage:
 
             # маркер шага ставим обёрткой вокруг APPLY_MODEL
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
-
-            set_torch_compile_wrapper(model=m, keys=compile_key_list, backend=backend, mode=mode, dynamic=dynamic, fullgraph=fullgraph)           
+            try:
+                # существующие строки, включая формирование compile_key_list…
+                set_torch_compile_wrapper(model=m, keys=compile_key_list,
+                                          backend=backend, mode=mode,
+                                          dynamic=dynamic, fullgraph=fullgraph)
+            finally:
+                # Вернуть поведение обратно, чтобы не ломать другие ноды
+                import torch as _torch
+                _torch.compile = _orig_compile
+                print("[KJNodes fork] torch.compile restored", flush=True)
         except:
             raise RuntimeError("Failed to compile model")
 
