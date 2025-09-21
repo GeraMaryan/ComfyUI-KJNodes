@@ -762,16 +762,20 @@ class TorchCompileModelFluxAdvancedV2:
                 from torch.compiler import cudagraph_mark_step_begin as _cmark
             except Exception:
                 _cmark = None
-            def _mark_wrapper(executor):
-                def _wrapped(*args, **kwargs):
-                    if _cmark:
-                        _cmark()
-                    return executor(*args, **kwargs)
+            from comfy.patcher_extension import WrappersMP
 
-                return _wrapped
+            try:
+                from torch.compiler import cudagraph_mark_step_begin as _cmark
+            except Exception:
+                _cmark = None
 
-            # маркер шага ставим обёрткой вокруг APPLY_MODEL
+            def _mark_wrapper(self, *args, **kwargs):
+                if _cmark:
+                    _cmark()
+                return self.original(*args, **kwargs)
+
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
+
             try:
                 # существующие строки, включая формирование compile_key_list…
                 set_torch_compile_wrapper(model=m, keys=compile_key_list,
@@ -980,16 +984,20 @@ class TorchCompileModelWanVideoV2_custom:
                 from torch.compiler import cudagraph_mark_step_begin as _cmark
             except Exception:
                 _cmark = None
-            def _mark_wrapper(executor):
-                def _wrapped(*args, **kwargs):
-                    if _cmark:
-                        _cmark()
-                    return executor(*args, **kwargs)
+            from comfy.patcher_extension import WrappersMP
 
-                return _wrapped
+            try:
+                from torch.compiler import cudagraph_mark_step_begin as _cmark
+            except Exception:
+                _cmark = None
 
-            # маркер шага ставим обёрткой вокруг APPLY_MODEL
+            def _mark_wrapper(self, *args, **kwargs):
+                if _cmark:
+                    _cmark()
+                return self.original(*args, **kwargs)
+
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
+
             try:
                 # существующие строки, включая формирование compile_key_list…
                 set_torch_compile_wrapper(model=m, keys=compile_key_list,
@@ -1077,16 +1085,20 @@ class TorchCompileModelQwenImage:
                 from torch.compiler import cudagraph_mark_step_begin as _cmark
             except Exception:
                 _cmark = None
-            def _mark_wrapper(executor):
-                def _wrapped(*args, **kwargs):
-                    if _cmark:
-                        _cmark()
-                    return executor(*args, **kwargs)
+            from comfy.patcher_extension import WrappersMP
 
-                return _wrapped
+            try:
+                from torch.compiler import cudagraph_mark_step_begin as _cmark
+            except Exception:
+                _cmark = None
 
-            # маркер шага ставим обёрткой вокруг APPLY_MODEL
+            def _mark_wrapper(self, *args, **kwargs):
+                if _cmark:
+                    _cmark()
+                return self.original(*args, **kwargs)
+
             m.add_wrapper_with_key(WrappersMP.APPLY_MODEL, "cg.mark_step", _mark_wrapper)
+
             try:
                 # существующие строки, включая формирование compile_key_list…
                 set_torch_compile_wrapper(model=m, keys=compile_key_list,
