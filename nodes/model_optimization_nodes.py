@@ -732,12 +732,19 @@ class TorchCompileModelFluxAdvancedV2:
         import torch as _torch
         _orig_compile = _torch.compile
 
-        def _compile_nocg(mod, *a, **kw):
+        def _compile_nocg(mod=None, *a, **kw):
             kw.setdefault("disable_cudagraphs", True)
+            # декораторный вызов: torch.compile(...)(module)
+            if mod is None:
+                def _decorator(m):
+                    return _orig_compile(m, *a, **kw)
+
+                return _decorator
+            # прямой вызов: torch.compile(module, ...)
             return _orig_compile(mod, *a, **kw)
 
         _torch.compile = _compile_nocg
-        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        print("[KJNodes FORK] torch.compile override active (decorator-safe)", flush=True)
         # --- /KJ FORK ---
 
         compile_key_list = []
@@ -946,12 +953,19 @@ class TorchCompileModelWanVideoV2_custom:
         import torch as _torch
         _orig_compile = _torch.compile
 
-        def _compile_nocg(mod, *a, **kw):
+        def _compile_nocg(mod=None, *a, **kw):
             kw.setdefault("disable_cudagraphs", True)
+            # декораторный вызов: torch.compile(...)(module)
+            if mod is None:
+                def _decorator(m):
+                    return _orig_compile(m, *a, **kw)
+
+                return _decorator
+            # прямой вызов: torch.compile(module, ...)
             return _orig_compile(mod, *a, **kw)
 
         _torch.compile = _compile_nocg
-        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        print("[KJNodes FORK] torch.compile override active (decorator-safe)", flush=True)
         # --- /KJ FORK ---
 
         try:
@@ -1036,12 +1050,19 @@ class TorchCompileModelQwenImage:
         import torch as _torch
         _orig_compile = _torch.compile
 
-        def _compile_nocg(mod, *a, **kw):
+        def _compile_nocg(mod=None, *a, **kw):
             kw.setdefault("disable_cudagraphs", True)
+            # декораторный вызов: torch.compile(...)(module)
+            if mod is None:
+                def _decorator(m):
+                    return _orig_compile(m, *a, **kw)
+
+                return _decorator
+            # прямой вызов: torch.compile(module, ...)
             return _orig_compile(mod, *a, **kw)
 
         _torch.compile = _compile_nocg
-        print("[KJNodes fork] torch.compile patched: default disable_cudagraphs=True", flush=True)
+        print("[KJNodes FORK] torch.compile override active (decorator-safe)", flush=True)
         # --- /KJ FORK ---
 
         try:
